@@ -16,5 +16,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0",
   "org.json4s" %% "json4s-native" % "3.6.8",
   "mysql" % "mysql-connector-java" % "8.0.21",
-  "com.pauldijou" %% "jwt-json4s-native" % "4.2.0"
+  "com.pauldijou" %% "jwt-json4s-native" % "4.2.0",
+  "commons-io" % "commons-io" % "2.6"
 )
