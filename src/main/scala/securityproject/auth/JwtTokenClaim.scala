@@ -5,4 +5,4 @@ package securityproject.auth
   */
 import java.time.LocalDateTime
 
-case class JwtTokenClaim(userId: Long, username: String, expiration: LocalDateTime)
+case class JwtTokenClaim(userId: Long, email: String, expiration: LocalDateTime)

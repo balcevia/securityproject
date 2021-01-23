@@ -11,7 +11,7 @@ trait SessionValidator extends ValidatorBase {
 
   def validateAuthRequest(authRequest: AuthRequest)(implicit ec: ExecutionContext): Future[(String, Array[Byte])] = {
     for {
-      username <- validateRequired(authRequest.username, "Username is required")
+      username <- validateRequired(authRequest.email, "Email is required")
       password <- validateRequired(authRequest.password, "Password, is required")
     } yield (username, password)
   }

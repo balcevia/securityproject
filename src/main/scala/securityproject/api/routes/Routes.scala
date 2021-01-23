@@ -5,17 +5,20 @@ package securityproject.api.routes
   */
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import securityproject.{AppExceptionHandler, AppRejectionHandler}
+import securityproject.{AppDirectives, AppExceptionHandler, AppRejectionHandler}
 
-object Routes {
+object Routes extends CORSHandler with AppDirectives {
 
-  val routes: Route =
+  val routes: Route = corsHandler {
     handleExceptions(AppExceptionHandler.handler) {
       handleRejections(AppRejectionHandler.handler) {
         concat(
           SessionRoutes.routes,
-          UserRoutes.routes
+          UserRoutes.routes,
+          FileRoutes.routes,
+          LoginActivityRoutes.routes
         )
       }
     }
+  }
 }

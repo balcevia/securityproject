@@ -1,8 +1,9 @@
 package securityproject.model.file
 
-/**
-  * Created by Alfred on 20.01.2021.
-  */
-class PersistedFileInfoDTO {
-
-}
+case class PersistedFileInfoDTO(
+                                 id: Option[Int],
+                                 owner: String,
+                                 fileName: String,
+                                 isPrivate: Boolean,
+                                 shouldEncrypt: Boolean
+                               )

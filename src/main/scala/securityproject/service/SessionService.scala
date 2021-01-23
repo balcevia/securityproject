@@ -1,9 +1,5 @@
 package securityproject.service
 
-/**
-  * Created by Alfred on 12.01.2021.
-  */
-
 import java.time.LocalDateTime
 
 import securityproject.AppConfig
@@ -16,35 +12,41 @@ import securityproject.validator.SessionValidator
 import scala.concurrent.{ExecutionContext, Future}
 
 trait SessionService {
-  protected val userDAO: UserDAO
+
+  import securityproject.AppActorSystem.system
+
+  protected val userService: UserService
+  protected val loginActivityService: LoginActivityService
   protected val jwtTokenService: JwtTokenService
   protected val loginCountThreshold: Int
+  protected val loginDelayMilliseconds: Int
 
-  def authenticate(request: AuthRequest)(implicit ec: ExecutionContext): Future[AuthToken] = {
-    // fixme validate outside of the service
-    for {
-      (username, password) <- SessionValidator.validateAuthRequest(request)
-      user <- authenticateUser(username, password)
-    } yield buildNewToken(user)
+  def authenticate(username: String, password: Array[Byte], ipAddress: String)(implicit ec: ExecutionContext): Future[AuthToken] = {
+    authenticateUser(username, password, ipAddress).map(buildNewToken)
   }
 
   private def buildNewToken(user: User): AuthToken = {
     val expirationDate = LocalDateTime.now().plusDays(1)
-    val token = jwtTokenService.generateToken(JwtTokenClaim(user.id.get, user.username, expirationDate))
-    AuthToken(user.id.get, user.username, token)
+    val token = jwtTokenService.generateToken(JwtTokenClaim(user.id.get, user.email, expirationDate))
+    AuthToken(user.id.get, user.email, token)
   }
 
 
-  private def authenticateUser(username: String, password: Array[Byte])(implicit ec: ExecutionContext): Future[User] = {
-    userDAO.getByUsername(username).flatMap {
+  private def authenticateUser(username: String, password: Array[Byte], ipAddress: String)(implicit ec: ExecutionContext): Future[User] = {
+    import scala.concurrent.duration._
+
+    userService.getByEmail(username).flatMap {
       case Some(user) =>
-        if (user.loginCount == 3) {
-          Future.failed(AuthenticationException("Exceeded maximum number of logins"))
+        if (user.invalidLoginCount == loginCountThreshold) {
+          akka.pattern.after(loginDelayMilliseconds.millis)(Future.failed(AuthenticationException("Exceeded maximum number of logins")))
         }
         else if (isPasswordValid(user, password)) {
-          userDAO.insertOrUpdate(user.copy(loginCount = 0)).map(_ => user)
+          for {
+            u <- userService.insertOrUpdate(user.copy(invalidLoginCount = 0)).map(_ => user)
+            _ <- loginActivityService.addActivity(u.id.get, ipAddress)
+          } yield u
         } else {
-          userDAO.insertOrUpdate(user.copy(loginCount = user.loginCount + 1))
+          userService.insertOrUpdate(user.copy(invalidLoginCount = user.invalidLoginCount + 1))
             .flatMap(_ => Future.failed(AuthenticationException("Username or password is invalid")))
         }
       case None => Future.failed(AuthenticationException("Username or password is invalid"))
@@ -57,12 +59,14 @@ trait SessionService {
   }
 
   def getToken(token: String): Option[AuthToken] = {
-    jwtTokenService.decode(token).toOption.map(claim => AuthToken(claim.userId, claim.username, token))
+    jwtTokenService.decode(token).toOption.map(claim => AuthToken(claim.userId, claim.email, token))
   }
 }
 
 object SessionService extends SessionService {
-  override protected val userDAO: UserDAO = UserDAO
+  override protected val userService: UserService = UserService
+  override protected val loginActivityService: LoginActivityService = LoginActivityService
   override protected val jwtTokenService: JwtTokenService = JwtTokenService
   override protected val loginCountThreshold: Int = AppConfig.getInt("loginCountThreshold")
+  override protected val loginDelayMilliseconds: Int = AppConfig.getInt("loginDelayMilliseconds")
 }

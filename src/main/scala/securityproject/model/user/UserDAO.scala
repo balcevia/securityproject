@@ -11,10 +11,12 @@ import securityproject.model.DB.session.profile.api._
 import scala.concurrent.{ExecutionContext, Future}
 
 trait UserDAO extends DAO[User, Long, UserTable] {
-  def getByUsername(username: String)(implicit ec: ExecutionContext): Future[Option[User]] =
-    getByQuery(_.username === username).map(_.headOption)
+  def getByEmail(email: String)(implicit ec: ExecutionContext): Future[Option[User]] =
+    getByQuery(_.email === email).map(_.headOption)
+
+  def getByIds(ids: Seq[Long]): Future[Seq[User]] = getByQuery(_.id inSet ids)
 }
 
 object UserDAO extends UserDAO {
-  override protected def tableQuery = TableQuery[UserTable]
+  override protected def tableQuery: TableQuery[UserTable] = TableQuery[UserTable]
 }

@@ -5,12 +5,14 @@ package securityproject.utils
   */
 import org.json4s._
 import org.json4s.native.Serialization.{read, write, writePretty}
+import slick.jdbc.MySQLProfile
 
 object JsonUtils {
 
   val customSerializers = Seq(
     new ArrayBytesSerializer,
-    new LocalDateTimeSerializer
+    new LocalDateTimeSerializer,
+    new EnumSerializer
   )
 
   implicit val formats: Formats = DefaultFormats ++ customSerializers
@@ -25,4 +27,8 @@ object JsonUtils {
 
   def parse[T](jValue: JValue)(implicit manifest: Manifest[T]): T = jValue.extract[T]
 
+  def mappedJsonColumnType[T <: AnyRef](implicit m: Manifest[T]): MySQLProfile.BaseColumnType[T]= {
+    import slick.jdbc.MySQLProfile.api._
+    MappedColumnType.base[T, String](format, parse[T])
+  }
 }

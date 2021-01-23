@@ -1,8 +1,15 @@
 package securityproject.model.file
 
-/**
-  * Created by Alfred on 20.01.2021.
-  */
-class PersistedFileInfo {
+import securityproject.model.Identifiable
 
+case class PersistedFileInfo(
+                              id: Option[Int],
+                              userId: Long,
+                              filePath: String,
+                              fileName: String,
+                              isPrivate: Boolean,
+                              secretKey: Option[Array[Byte]],
+                              salt: Option[Array[Byte]]
+                            ) extends Identifiable[Int, PersistedFileInfo] {
+  override def withId(id: Option[Int]): PersistedFileInfo = copy(id = id)
 }

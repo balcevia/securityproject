@@ -1,8 +1,12 @@
 package securityproject.model.loginActivity
 
-/**
-  * Created by Alfred on 20.01.2021.
-  */
-class LoginActivity {
+import java.time.LocalDateTime
 
+import securityproject.model.Identifiable
+
+case class LoginActivity(id: Option[Int],
+                         userId: Long,
+                         ipAddress: String,
+                         timestamp: LocalDateTime) extends Identifiable[Int, LoginActivity] {
+  override def withId(id: Option[Int]): LoginActivity = copy(id = id)
 }

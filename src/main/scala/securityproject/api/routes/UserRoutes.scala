@@ -1,7 +1,8 @@
 package securityproject.api.routes
 
 import securityproject.AppDirectives
-import securityproject.model.user.UserPostRequest
+import securityproject.auth.AuthToken
+import securityproject.model.user.{UserDTO, UserPostRequest}
 import securityproject.service.UserService
 import securityproject.validator.UserValidator
 
@@ -15,7 +16,7 @@ import akka.http.scaladsl.server.Directives._
 
 object UserRoutes extends AppDirectives {
 
-  def routes: Route = {
+  def routes: Route = concat(
     path("user") {
       post {
         entity(as[UserPostRequest]) { request =>
@@ -24,14 +25,27 @@ object UserRoutes extends AppDirectives {
           }
         }
       }
+    },
+    path("user-list") {
+      get {
+        authenticatedRequests { token =>
+          completeFuture{
+            getListOfUsers(token)
+          }
+        }
+      }
     }
-  }
+  )
 
   def createUser(request: UserPostRequest): Future[Unit] = {
     for {
       validRequest <- UserValidator.validatePostRequest(request)
       _ <- UserService.createNewUser(validRequest)
     } yield()
+  }
+
+  def getListOfUsers(token: AuthToken): Future[Seq[UserDTO]] = {
+    UserService.getListOfUsers(token.userId)
   }
 
 }

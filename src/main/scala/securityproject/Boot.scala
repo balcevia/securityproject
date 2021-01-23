@@ -17,7 +17,7 @@ object Boot extends App with LazyLogging {
   implicit val system: ActorSystem = AppActorSystem.system
   implicit val executionContext: ExecutionContext = AppActorSystem.executionContext
 
-  Http().newServerAt("localhost", 8080).bind(Routes.routes).onComplete {
+  Http().newServerAt("0.0.0.0", 1070).bind(Routes.routes).onComplete {
     case Success(_) => logger.info("HTTP binding complete!")
     case Failure(e) => logger.error("HTTP binding failed", e)
   }

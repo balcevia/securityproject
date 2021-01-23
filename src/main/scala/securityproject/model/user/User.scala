@@ -7,8 +7,10 @@ import securityproject.model.Identifiable
   * */
 
 case class User(id: Option[Long],
-                username: String,
+                email: String,
                 password: Array[Byte],
                 salt: Array[Byte],
-                loginCount: Int
-               ) extends Identifiable[Long]
+                invalidLoginCount: Int,
+               ) extends Identifiable[Long, User] {
+  override def withId(id: Option[Long]): User = copy(id = id)
+}

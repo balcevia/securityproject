@@ -1,8 +1,5 @@
 package securityproject.auth
 
-/**
-  * Created by Alfred on 12.01.2021.
-  */
 import org.json4s.Extraction
 import org.json4s.JsonAST.JObject
 import pdi.jwt.{JwtAlgorithm, JwtJson4s}
